@@ -1,0 +1,117 @@
+// func main() {
+// 	client := apiClient("sheets", "moonsats", "")
+// 	srv, err := sheets.New(client)
+// 	if err != nil {
+// 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
+// 	}
+// 	fmt.Printf("%T", srv)
+
+// 	spreadsheetId := "1TofihRh87iKRsNOCrjQusCgStPkIDx-wOqZa1xee-SI"
+// 	readRange := "sheet1!A2:E"
+// 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
+// 	if err != nil {
+// 		log.Fatalf("Unable to retrieve data from sheet: %v", err)
+// 	}
+
+// 	if len(resp.Values) == 0 {
+// 		fmt.Println("No data found.")
+// 	} else {
+// 		fmt.Println("Name, Major:")
+// 		for _, row := range resp.Values {
+// 			// Print columns A and E, which correspond to indices 0 and 4.
+// 			fmt.Printf("%s, %s\n", row[0], row[4])
+// 		}
+// 	}
+
+// 	// // I had to use a Service Account to build my app
+// 	// b, err := ioutil.ReadFile("google_bot_moonsats.json")
+// 	// if err != nil {
+// 	// 	log.Fatalf("Unable to read client secret file: %v", err)
+// 	// }
+
+// 	// // If modifying these scopes, delete your previously saved token.json.
+// 	// config, err := google.JWTConfigFromJSON(b, "https://www.googleapis.com/auth/spreadsheets")
+// 	// if err != nil {
+// 	// 	log.Fatalf("Unable to parse client secret file to config: %v", err)
+// 	// }
+// 	// client := config.Client(oauth2.NoContext)
+
+// 	// srv, err := sheets.New(client)
+// 	// if err != nil {
+// 	// 	log.Fatalf("Unable to retrieve Sheets client: %v", err)
+// 	// }
+
+// 	// spreadsheetId := "1TofihRh87iKRsNOCrjQusCgStPkIDx-wOqZa1xee-SI"
+// 	// readRange := "sheet1!A2:E"
+// 	// resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
+// 	// if err != nil {
+// 	// 	log.Fatalf("Unable to retrieve data from sheet: %v", err)
+// 	// }
+
+// 	// if len(resp.Values) == 0 {
+// 	// 	fmt.Println("No data found.")
+// 	// } else {
+// 	// 	fmt.Println("Name, Major:")
+// 	// 	for _, row := range resp.Values {
+// 	// 		// Print columns A and E, which correspond to indices 0 and 4.
+// 	// 		fmt.Printf("%s, %s\n", row[0], row[4])
+// 	// 	}
+// 	// }
+
+// 	// // Modify this to your Needs
+// 	// rangeData := "sheet1!A1:E"
+// 	// rb := &sheets.BatchUpdateValuesRequest{
+// 	// 	ValueInputOption: "USER_ENTERED",
+// 	// }
+// 	// print()
+// 	// rb.Data = append(rb.Data, &sheets.ValueRange{
+// 	// 	Range:  rangeData,
+// 	// 	Values: rows,
+// 	// })
+// 	// // Do a batch update at once
+// 	// _, err = srv.Spreadsheets.Values.BatchUpdate(spreadsheetId, rb).Do()
+// 	// if err != nil {
+// 	// 	log.Fatal(err)
+// 	// }
+
+// }
+
+// // fmt.Printf("%T", client)
+// // // Keep
+// // srv, err := keep.New(client)
+// // if err != nil {
+// // 	log.Fatalf("Unable to retrieve Sheets client: %v", err)
+// // }
+// // fmt.Printf("%T", srv)
+
+// // resp, err := srv.Keep.Note.Get().Do()
+// // resp, err := srv.Notes.List().Do()
+// // resp, err := srv.Notes.Get("1dW0wkfYzkIH0ZOTh4pEp_n3GBCFaO7yc-OyxQmddM6H1T9TX7O0ytnOEq1et_V0").Do()
+// // resp, err := srv.Notes.Get("name=1wbRAh0uwYOca9CFiD2Ec1LcPnp9rnJECLSkILUSHbgimdPpFmK-jX7n9w_OUZIZk6eHLTA").Do()
+// // if err != nil {
+// // 	log.Fatalf("Unable to retrieve data from sheet: %v", err)
+// // }
+// // fmt.Printf("%+v", resp)
+
+// // srv, err := sheets.New(client)
+// // if err != nil {
+// // 	log.Fatalf("Unable to retrieve Sheets client: %v", err)
+// // }
+// // fmt.Printf("%T", srv)
+
+// // spreadsheetId := "1TofihRh87iKRsNOCrjQusCgStPkIDx-wOqZa1xee-SI"
+// // readRange := "sheet1!A2:E"
+// // resp, err := srv.Spreadsheets.Values.Get(spreadsheetId, readRange).Do()
+// // if err != nil {
+// // 	log.Fatalf("Unable to retrieve data from sheet: %v", err)
+// // }
+
+// // if len(resp.Values) == 0 {
+// // 	fmt.Println("No data found.")
+// // } else {
+// // 	fmt.Println("Name, Major:")
+// // 	for _, row := range resp.Values {
+// // 		// Print columns A and E, which correspond to indices 0 and 4.
+// // 		fmt.Printf("%s, %s\n", row[0], row[4])
+// // 	}
+// // }

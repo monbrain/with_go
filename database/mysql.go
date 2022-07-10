@@ -1,0 +1,394 @@
+// https://1minute-before6pm.tistory.com/19
+
+// package with_go/on_database
+// package on_database
+package database
+
+import (
+	"database/sql"
+	"fmt"
+	"io/ioutil"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+
+	// "time"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+//DB접속정보를 가지고 있는 객체를 정의합니다.
+type DBMS struct {
+	User   string `yaml:"user"`
+	Passwd string `yaml:"passwd"`
+	Host   string `yaml:"host"`
+	Port   int    `yaml:"port"` // TODO: string -> int
+	// db      string // TODO: string -> int
+	// Charset string `yaml:"charset"`
+}
+
+func getConfigPath(folder string) string {
+	return folder + "database_servers.yml"
+}
+
+// func getServerConfig(fileName string) (*Person, error) {
+func GetServerConfig(serverName string) (map[string]interface{}, error) {
+	path := getConfigPath("/home/ubuntu/dev/inGo/with_go/settings/")
+	buf, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var configs map[string]interface{}
+
+	if err := yaml.Unmarshal(buf, &configs); err != nil {
+		panic(err)
+	}
+
+	return configs[serverName].(map[string]interface{}), nil
+}
+
+func ConnectDb(config map[string]interface{}, dbName string) (string, *DBMS) {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", config["user"], config["passwd"], config["host"], config["port"], dbName)
+	// fmt.Printf("user: %s", config["user"].(string))
+	dbms := &DBMS{User: config["user"].(string), Passwd: config["passwd"].(string), Host: config["host"].(string), Port: config["port"].(int)}
+	return dsn, dbms
+}
+
+func OpenDb(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	// conn, err := sql.Open("mysql", dsn)
+	return db, err
+}
+
+func sqlValues(data map[string]interface{}) string {
+	vals := ""
+	for _, val := range data {
+		switch val.(type) {
+		case string:
+			vals += `"` + fmt.Sprintf("%v", val) + `"` + ", "
+		default:
+			vals += fmt.Sprintf("%v", val) + ", "
+		}
+	}
+	return vals
+}
+
+func sqlKeys(data map[string]interface{}) string {
+	keys := ""
+	for key, _ := range data {
+		keys += key + ", "
+	}
+	return keys[:len(keys)-2]
+}
+
+func keySlice(data map[string]interface{}) []string {
+	keys := []string{}
+	for key, _ := range data {
+		keys = append(keys, key)
+	}
+	return keys
+}
+
+func valSlice_(data map[string]interface{}) []string {
+	keys := keySlice(data)
+	vals := []string{}
+	for _, key := range keys {
+		switch data[key].(type) {
+		case string:
+			val := `"` + fmt.Sprintf("%v", data[key]) + `"`
+			vals = append(vals, val)
+		default:
+			val := fmt.Sprintf("%v", data[key])
+			vals = append(vals, val)
+		}
+		// vals = append(vals, data.(map[string]interface{})[key])
+	}
+	return vals
+}
+
+func valSql(data map[string]interface{}, keys []string) string {
+	vals := []string{}
+	for _, key := range keys {
+		switch data[key].(type) {
+		case string:
+			val := `"` + fmt.Sprintf("%v", data[key]) + `"`
+			vals = append(vals, val)
+		default:
+			val := fmt.Sprintf("%v", data[key])
+			vals = append(vals, val)
+		}
+		// vals = append(vals, data.(map[string]interface{})[key])
+	}
+	return "(" + strings.Join(vals, ", ") + ")"
+}
+
+func keyValSlice(data map[string]interface{}) ([]string, []string) {
+	keys := keySlice(data)
+	vals := []string{}
+	for _, key := range keys {
+		switch data[key].(type) {
+		case string:
+			val := `"` + fmt.Sprintf("%v", data[key]) + `"`
+			vals = append(vals, val)
+		default:
+			val := fmt.Sprintf("%v", data[key])
+			vals = append(vals, val)
+		}
+		// vals = append(vals, data.(map[string]interface{})[key])
+	}
+	return keys, vals
+}
+
+func setInsertKeyValsFromMaps(data []map[string]interface{}) (string, string) {
+	keys := keySlice(data[0])
+	vals := []string{}
+	for _, d := range data {
+		vals = append(vals, valSql(d, keys))
+	}
+
+	return "(" + strings.Join(keys, ", ") + ")", strings.Join(vals, ", ")
+}
+
+func sqlKeyVals(data map[string]interface{}) (string, string) {
+	keys := ""
+	vals := ""
+	for key, val := range data {
+		keys += key + ", "
+		switch val.(type) {
+		case string:
+			vals += `"` + fmt.Sprintf("%v", val) + `"` + ", "
+		default:
+			vals += fmt.Sprintf("%v", val) + ", "
+		}
+	}
+	return keys[:len(keys)-2], vals[:len(vals)-2]
+}
+
+func sqlSelect(fields []string, table string) string {
+	keys := "*"
+	if len(fields) > 0 {
+		keys = strings.Join(fields, ", ")
+	}
+	return "SELECT " + keys + " FROM " + table
+}
+
+// func sqlInsertOne(data map[string]interface{}, table string) string {
+// 	keys := "("
+// 	vals := "("
+// 	for key, val := range data {
+// 		keys += key + ", "
+// 		switch val.(type) {
+// 		case string:
+// 			vals += `"` + fmt.Sprintf("%v", val) + `"` + ", "
+// 		default:
+// 			vals += fmt.Sprintf("%v", val) + ", "
+// 		}
+// 	}
+
+// 	return "INSERT INTO " + table + " " + keys[:len(keys)-2] + ")" + " VALUES " + vals[:len(vals)-2] + ")"
+// }
+
+func sqlInsertOne(data map[string]interface{}, table string) string {
+	keys, vals := sqlKeyVals(data)
+
+	return "INSERT INTO " + table + " (" + keys + ")" + " VALUES (" + vals + ")"
+}
+
+// // [BULK INSERTING - MYSQL 다량의 데이터 넣기](https://dev.dwer.kr/2020/04/mysql-bulk-inserting.html)
+// func sqlInsert(data []map[string]interface{}, table string) string {
+// 	keys := "("
+// 	vals := "("
+// 	for _, row := range data {
+// 		keys += key + ", "
+// 		switch val.(type) {
+// 		case string:
+// 			vals += `"` + fmt.Sprintf("%v", val) + `"` + ", "
+// 		default:
+// 			vals += fmt.Sprintf("%v", val) + ", "
+// 		}
+// 	}
+
+// 	return "INSERT INTO " + table + " " + keys[:len(keys)-2] + ")" + " VALUE " + vals[:len(vals)-2] + ")"
+// }
+
+// INSERT INTO table VALUES (1, "hello"), (2, "world"), (3, "!");
+
+func sqlUpdate(data map[string]interface{}, table string) string {
+	sets := "SET "
+	for key, val := range data {
+		sets += key + "="
+		switch val.(type) {
+		case string:
+			sets += `"` + fmt.Sprintf("%v", val) + `"` + ", "
+		default:
+			sets += fmt.Sprintf("%v", val) + ", "
+		}
+	}
+
+	return "UPDATE " + table + " " + sets[:len(sets)-2]
+}
+
+// DBMS method
+//쿼리하고 결과를 반환합니다.
+func (dbms DBMS) MySQLExecQuery(query string, db *sql.DB) ([]map[string]interface{}, error) {
+	//DB의 접속정보를 저장하고 db를 인스턴스화 한다.
+	// db, err := sql.Open("mysql", dbms.user+":"+dbms.password+"@tcp("+dbms.host+":"+dbms.port+")/"+dbms.db)
+	// db, err := Connect("coin")
+	//함수 종료시 db를 Close한다.
+	defer db.Close()
+
+	// //err발생했는지 확인한다.
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	//db를 통해 sql문을 실행 시킨다.
+	rows, err := db.Query(query)
+	// 함수가 종료되면 rows도 Close한다.
+	defer rows.Close()
+
+	//컬럼을 받아온다.
+	cols, err := rows.Columns()
+
+	//err발생했는지 확인한다.
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]interface{}, len(cols))
+
+	for i, _ := range data {
+		var d []byte
+		data[i] = &d
+	}
+
+	results := make([]map[string]interface{}, 0)
+
+	for rows.Next() {
+		err := rows.Scan(data...)
+		if err != nil {
+			return nil, err
+		}
+		result := make(map[string]interface{})
+		for i, item := range data {
+			result[cols[i]] = string(*(item.(*[]byte)))
+		}
+		results = append(results, result)
+	}
+
+	return results, nil
+}
+
+//SQL을 실행합니다.
+// func (dbms DBMS) MySQLExec(query string) (int64, int64, error) {
+func (dbms DBMS) MySQLExec(query string, db *sql.DB) (int64, int64, error) {
+	//DB의 접속정보를 저장하고 db를 인스턴스화 한다.
+	// db, err := sql.Open("mysql", dbms.user+":"+dbms.password+"@tcp("+dbms.host+":"+dbms.port+")/"+dbms.db)
+	// db, err := Connect("coin")
+	defer db.Close()
+
+	// //err발생했는지 확인한다.
+	// if err != nil {
+	// 	return -1, -1, err
+	// }
+
+	//SQL을 실행합니다.
+	result, err := db.Exec(query)
+	if err != nil {
+		return -1, -1, err
+	}
+
+	// 변경된 row의 갯수를 가져옵니다.
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return -1, -1, err
+	}
+
+	// 변경된 id를 가져옵니다.
+	lastInsertId, err := result.LastInsertId()
+	if err != nil {
+		return -1, -1, err
+	}
+
+	return rowsAffected, lastInsertId, nil
+}
+
+// CRUD
+
+func Find(fields []string, table string, db *sql.DB, dbms *DBMS) []map[string]interface{} {
+	results, _ := dbms.MySQLExecQuery("SELECT "+strings.Join(fields, ", ")+" FROM "+table, db)
+	return results
+}
+
+func (dbms DBMS) InsertOne() {
+
+}
+
+func Insert(data []map[string]interface{}, table string, db *sql.DB, dbms *DBMS) {
+	keys, vals := setInsertKeyValsFromMaps(data)
+	query := "INSERT INTO " + table + keys + " VALUES " + vals
+	dbms.MySQLExec(query, db)
+	// rowsAffected, lastInsertId, err := dbms.MySQLExec(query, db)
+}
+
+// func main() {
+// 	// data := map[string]interface{"a":1, "b":"테스트"}
+// 	// var abc = make(map[string]interface{})
+// 	// a := map[string]interface{}{"a": 1, "b": "2", "c": "def", "d": "한글test이순신"}
+// 	// b := map[string]interface{}{"a": 2, "b": "3", "c": "ghi", "d": "한글test세종대왕"}
+// 	// data := []map[string]interface{}{a, b}
+
+// 	// fmt.Println(sqlInsertOne(abc, "table1"))
+// 	// fmt.Println(keySlice(abc))
+// 	// fmt.Println(valSlice(abc))
+// 	// fmt.Println(keyValSlice(abc))
+// 	// // config, err := getServerConfig("db_connect.yml")
+// 	// // NOTE: connect
+// 	config, err := getServerConfig("config_db.yml", "mysql_Oracle_ex")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	dbName := "coin"
+// 	fmt.Printf("%s:%s@tcp(%s:%d)/%s", config["user"], config["passwd"], config["host"], config["port"], dbName)
+// 	dsn, dbms := connectDb(config, "coin")
+// 	// fmt.Printf("%s\n%+v\n", dsn, dbms)
+// 	conn, err := openDb(dsn)
+
+// 	// // INSERT
+// 	// data := []map[string]interface{}{
+// 	// 	map[string]interface{}{"eng": "Ripple", "kor": "리플", "ticker": "KRW-XRP"},
+// 	// 	map[string]interface{}{"eng": "Terra", "kor": "테라", "ticker": "KRW-TER"},
+// 	// }
+// 	// fmt.Println(setInsertKeyValsFromMaps(data))
+// 	// insert(data, "coins", conn, dbms)
+
+// 	// // FIND
+// 	fmt.Println(find([]string{"eng", "kor", "ticker"}, "coins", conn, dbms))
+
+// 	// results, _ := dbms.MySQLExecQuery("SELECT eng, kor, ticker FROM coins")
+// 	// // for result range results
+// 	// for _, result := range results {
+// 	// 	fmt.Println("eng:", result["eng"])
+// 	// 	fmt.Println("kor:", result["kor"])
+// 	// 	fmt.Println("ticker:", result["ticker"])
+// 	// }
+// 	// // fmt.Println(results)
+
+// 	// // fmt.Println("Parsing YAML file")
+
+// 	// // dbms, err := loadConfig("db_connect.yml")
+// 	// // if err != nil {
+// 	// // 	log.Fatal(err)
+// 	// // }
+// 	// // fmt.Printf("%+v\n", dbms)
+// 	// // conn, err := connectDb(dbms, "coin")
+// 	// // defer conn.Close()
+
+// 	// // // // SELECT
+// 	// // rows, err := conn.Query("SELECT eng, kor, ticker FROM coins")
+// 	// // if err != nil {
+// 	// // 	return
+// 	// // }
+// 	// // fmt.Println(rows)
+// }
