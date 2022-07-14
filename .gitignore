@@ -16,7 +16,7 @@
 
 # settings, config
 /env
-/config
-/settings
+/_config
+/_settings
 *.yml
 *.json

@@ -20,7 +20,8 @@ func TestSrvSheets(t *testing.T) {
 func TestReadSheet(t *testing.T) {
 	srv := cloud.SrvSheets("sheets", "moonsats", "")
 	spreadsheetId := "1TofihRh87iKRsNOCrjQusCgStPkIDx-wOqZa1xee-SI"
-	readRange := "sheet2!A1:C17"
+	// readRange := "sheet2!A1:C17"
+	readRange := "candles"
 	res := cloud.ReadSheet(srv, spreadsheetId, readRange)
 
 	if res == nil {

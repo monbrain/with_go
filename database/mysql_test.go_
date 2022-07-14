@@ -2,46 +2,51 @@ package database_test
 
 import (
 	"fmt"
-	"log"
+	// "log"
 	"testing"
 	"with_go/database"
+	"with_go/env"
 )
 
+// env.GetConfigYaml("database_conn", "mysql_Oracle1_root_in")
+
 func TestGetServerConfig(t *testing.T) {
-	config, _ := database.GetServerConfig("mysql_Oracle_ex")
+	// config, _ := database.GetServerConfig("mysql_Oracle_ex")
+	config := env.GetConfigYaml("database_conn", "mysql_Oracle1_root_ex")
 	if config == nil {
 		t.Error("Wrong result")
 	}
+	fmt.Printf("%v", config)
 }
 
-func TestMysqlConn(t *testing.T) {
-	config, err := database.GetServerConfig("mysql_Oracle_ex")
-	if err != nil {
-		log.Fatal(err)
-	}
-	dbName := "coin"
-	// fmt.Printf("%s:%s@tcp(%s:%d)/%s", config["user"], config["passwd"], config["host"], config["port"], dbName)
-	dsn, _ := database.ConnectDb(config, dbName)
-	conn, err := database.OpenDb(dsn)
+// func TestMysqlConn(t *testing.T) {
+// 	config, err := database.GetServerConfig("mysql_Oracle_ex")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	dbName := "coin"
+// 	// fmt.Printf("%s:%s@tcp(%s:%d)/%s", config["user"], config["passwd"], config["host"], config["port"], dbName)
+// 	dsn, _ := database.ConnectDb(config, dbName)
+// 	conn, err := database.OpenDb(dsn)
+// 	if conn == nil {
+// 		t.Error("Wrong result")
+// 	}
+// }
+
+func TestConnectDb(t *testing.T) {
+	conn, dbms, err := database.ConnectDb("mysql_Oracle1_root_ex", "coin")
 	if conn == nil {
 		t.Error("Wrong result")
 	}
+	fmt.Println(dbms, err)
 }
 
 func TestMysqlFind(t *testing.T) {
-	config, err := database.GetServerConfig("mysql_Oracle_ex")
-	if err != nil {
-		log.Fatal(err)
-	}
-	dbName := "coin"
-	// fmt.Printf("%s:%s@tcp(%s:%d)/%s", config["user"], config["passwd"], config["host"], config["port"], dbName)
-	dsn, dbms := database.ConnectDb(config, dbName)
-	conn, err := database.OpenDb(dsn)
+	conn, dbms, _ := database.ConnectDb("mysql_Oracle1_root_ex", "coin")
 	if conn == nil {
 		t.Error("Wrong result")
 	}
 	fmt.Println(database.Find([]string{"eng", "kor", "ticker"}, "coins", conn, dbms))
-
 }
 
 // func TestMysqlInsert(t *testing.T) {
